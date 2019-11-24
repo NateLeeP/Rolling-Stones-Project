@@ -53,6 +53,7 @@ def clean_song_titles_dictionary(rs_dict):
     for album, track_list in rs_dict.items():
         rs_dict[album] = [track for track in track_list if track != '']
     
+    return rs_dict
 
 def scrape_album_names():
     """ Returns list of album names off Rolling Stones AZlyrics website """
@@ -73,7 +74,7 @@ def scrape_album_years():
     albums_scraped = [album.text for album in rs_soup.findAll('div','album') if 'album' in album.text]
 
     """ Extract years from scraped albums """
-    years = [re_year.search(album).group(0) for album in albums_scraped]
+    years = [re_year.search(album).group(0).replace('(','').replace(')','') for album in albums_scraped]
     album_names = scrape_album_names()
     
     years = list(zip(album_names, years))
@@ -89,26 +90,48 @@ def scrape_song(song_name):
     lyric = lyrics.strip().split('\n')
     return (song_title, lyric)
     
-
-
-
-
-
-
+def albums_by_decade(album_years):
+    """ Return four lists containing the albums broken up into decades: 60s, 70s, 80s, 90s """
+    """ Passed 'album years' is a list of tuples resulting from 'scrape_album_years' function. """
+    # Regular expression objects to match each decade
+    sixties_pattern = re.compile('196[0-9]')
+    seventies_pattern = re.compile('197[0-9]')
+    eighties_pattern = re.compile('198[0-9]')
+    nineties_pattern = re.compile('199[0-9]')
+    
+    # List containing the albums
+    sixties_albums = []
+    seventies_albums = []
+    eighties_albums = []
+    nineties_albums = []
+    
+    album_years = scrape_album_years()
+    #If match found, append the album name to the list. 
+    for album in album_years:
+        if re.search(sixties_pattern, str(album[1])):
+            sixties_albums.append(album[0])
+        if re.search(seventies_pattern, str(album[1])):
+            seventies_albums.append(album[0])
+        if re.search(eighties_pattern, str(album[1])):
+            eighties_albums.append(album[0])
+        if re.search(nineties_pattern, str(album[1])):
+            nineties_albums.append(album[0])
+    
+    return  sixties_albums, seventies_albums, eighties_albums, nineties_albums
 def lyric_words_count(lyrics):
     word_count_dict = {}
     for line in lyrics:
         for word in line.replace(',','').split(' '):
-            if word.lower().strip('.') in word_count_dict.keys():
+            if word.lower().strip('.') in word_count_dict.keys() and word.lower().strip('.'):
                 word_count_dict[word.lower().strip('.')] += 1
             else:
                 word_count_dict[word.lower().strip('.')] = 1
     return sorted(word_count_dict.items(), key = lambda x:x[1], reverse = True)
-
+"""
 def lyric_word_count(lyrics, word):
     value = 0
     for line in lyrics:
         for lyric_word in line.replace(',','').split(' '):
             if lyric_word.lower().strip('.') == word.lower():
                 value += 1
-    return (word, value) if value else 'Word does not appear!'
+    return (word, value) if value else 'Word does not appear!' """
